@@ -2,9 +2,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+const DATAFIELD_VOTING_COLUMN_CONTENT_USERID = 'content';
+
 function datafield_voting_gettotalvotes($recordid, $fieldid) {
     global $DB;
-    return $DB->count_records('data_votings', [
+    return $DB->count_records('data_content', [
         'recordid' => $recordid,
         'fieldid' => $fieldid
     ]);
@@ -12,7 +14,11 @@ function datafield_voting_gettotalvotes($recordid, $fieldid) {
 
 function datafield_voting_haveivoted($recordid, $fieldid) {
     global $DB, $USER;
-    return $DB->record_exists('data_votings', [
+    $useridcolumn = $DB->sql_compare_text(DATAFIELD_VOTING_COLUMN_CONTENT_USERID);
+    $useridvalue = $DB->sql_compare_text(':userid');
+    return $DB->record_exists_sql(
+        "SELECT * FROM {data_content} WHERE recordid = :recordid AND fieldid = :fieldid AND {$useridcolumn} = {$useridvalue}"
+    , [
         'recordid' => $recordid,
         'fieldid' => $fieldid,
         'userid' => $USER->id
@@ -52,23 +58,33 @@ function datafield_voting_getvotingarea($dataid, $fieldid, $recordid) {
     );
 }
 
-function datafield_voting_addrecord($dataid, $fieldid, $recordid, $userid = null) {
+function datafield_voting_addrecord($fieldid, $recordid, $userid = null) {
     global $DB, $USER;
+
+    $userid = is_null($userid) ? $USER->id : $userid;
+
     $newrecord = new stdClass();
-    $newrecord->dataid = $dataid;
     $newrecord->fieldid = $fieldid;
     $newrecord->recordid = $recordid;
-    $newrecord->userid = is_null($userid) ? $USER->id : $userid;
-    $newrecord->timecreated = time();
+    $newrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = $userid;
 
-    return $DB->insert_record('data_votings', $newrecord);
+    if (is_null($newrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID})) {
+        return false;
+    }
+
+    return $DB->insert_record('data_content', $newrecord);
 }
 
 function datafield_voting_deleterecord($fieldid, $recordid, $userid = null) {
     global $DB, $USER;
-    return $DB->delete_records('data_votings', [
+    $userid = is_null($userid) ? $USER->id : $userid;
+    $useridcolumn = $DB->sql_compare_text(DATAFIELD_VOTING_COLUMN_CONTENT_USERID);
+    $useridvalue = $DB->sql_compare_text(':userid');
+    return $DB->execute(
+        "DELETE FROM {data_content} WHERE recordid = :recordid AND fieldid = :fieldid AND {$useridcolumn} = {$useridvalue}"
+    , [
         'recordid' => $recordid,
         'fieldid' => $fieldid,
-        'userid' => is_null($userid) ? $USER->id : $userid
+        'userid' => $userid
     ]);
 }

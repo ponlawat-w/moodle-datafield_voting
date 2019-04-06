@@ -57,7 +57,7 @@ try {
             }
             throw new moodle_exception('Cannot undo vote', 'datafield_voting');
         } else {
-            if (datafield_voting_addrecord($field->dataid, $field->id, $recordid)) {
+            if (datafield_voting_addrecord($field->id, $recordid)) {
                 echo datafield_voting_getapijsonresponse($recordid, $fieldid);
                 exit;
             }
