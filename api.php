@@ -49,7 +49,8 @@ try {
         echo datafield_voting_getapijsonresponse($recordid, $fieldid);
         exit;
     } else if ($action == 'submitvote') {
-        $haveivoted = datafield_voting_haveivoted($recordid, $fieldid);
+        $userids = datafield_voting_getuserids(datafield_voting_getcontentrecord($recordid, $fieldid));
+        $haveivoted = datafield_voting_haveivoted($userids);
         if ($haveivoted) {
             if (datafield_voting_deleterecord($fieldid, $recordid)) {
                 echo datafield_voting_getapijsonresponse($recordid, $fieldid);

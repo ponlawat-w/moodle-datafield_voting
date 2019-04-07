@@ -47,4 +47,9 @@ class data_field_voting extends data_field_base {
         ]);
     }
 
+    function export_text_value($record) {
+        $userids = datafield_voting_getuserids($record);
+        return datafield_voting_gettotalvotes($userids);
+    }
+
 }

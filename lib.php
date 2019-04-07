@@ -4,31 +4,46 @@ defined('MOODLE_INTERNAL') || die();
 
 const DATAFIELD_VOTING_COLUMN_CONTENT_USERID = 'content';
 
-function datafield_voting_gettotalvotes($recordid, $fieldid) {
+function datafield_voting_getcontentrecord($recordid, $fieldid) {
     global $DB;
-    return $DB->count_records('data_content', [
+    $contentrecord = $DB->get_record('data_content', [
         'recordid' => $recordid,
         'fieldid' => $fieldid
     ]);
+    if ($contentrecord) {
+        return $contentrecord;
+    }
+
+    $newcontentrecord = new stdClass();
+    $newcontentrecord->fieldid = $fieldid;
+    $newcontentrecord->recordid = $recordid;
+    $newcontentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = '';
+    $newcontentrecord->id = $DB->insert_record('data_content', $newcontentrecord);
+    if ($newcontentrecord->id) {
+        return $newcontentrecord;
+    }
+    return null;
 }
 
-function datafield_voting_haveivoted($recordid, $fieldid) {
-    global $DB, $USER;
-    $useridcolumn = $DB->sql_compare_text(DATAFIELD_VOTING_COLUMN_CONTENT_USERID);
-    $useridvalue = $DB->sql_compare_text(':userid');
-    return $DB->record_exists_sql(
-        "SELECT * FROM {data_content} WHERE recordid = :recordid AND fieldid = :fieldid AND {$useridcolumn} = {$useridvalue}"
-    , [
-        'recordid' => $recordid,
-        'fieldid' => $fieldid,
-        'userid' => $USER->id
-    ]);
+function datafield_voting_getuserids($contentrecord) {
+    return explode(',', $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID});
+}
+
+function datafield_voting_gettotalvotes($userids) {
+    return count($userids);
+}
+
+function datafield_voting_haveivoted($userids) {
+    global $USER;
+    return in_array($USER->id, $userids);
 }
 
 function datafield_voting_getapijsonresponse($recordid, $fieldid) {
+    $contentrecord = datafield_voting_getcontentrecord($recordid, $fieldid);
+    $userids = datafield_voting_getuserids($contentrecord);
     return json_encode([
-        'totalvotes' => datafield_voting_gettotalvotes($recordid, $fieldid),
-        'haveivoted' => datafield_voting_haveivoted($recordid, $fieldid)
+        'totalvotes' => datafield_voting_gettotalvotes($userids),
+        'haveivoted' => datafield_voting_haveivoted($userids)
     ]);
 }
 
@@ -44,8 +59,10 @@ function datafield_voting_getvotingcontenthtml($totalvotes, $haveivoted) {
 }
 
 function datafield_voting_getvotingarea($dataid, $fieldid, $recordid) {
-    $totalvotes = datafield_voting_gettotalvotes($recordid, $fieldid);
-    $haveivoted = datafield_voting_haveivoted($recordid, $fieldid);
+    $contentrecord = datafield_voting_getcontentrecord($recordid, $fieldid);
+    $userids = datafield_voting_getuserids($contentrecord);
+    $totalvotes = datafield_voting_gettotalvotes($userids);
+    $haveivoted = datafield_voting_haveivoted($userids);
 
     return html_writer::span(datafield_voting_getvotingcontenthtml($totalvotes, $haveivoted),
         'datafield_voting-area',
@@ -63,28 +80,25 @@ function datafield_voting_addrecord($fieldid, $recordid, $userid = null) {
 
     $userid = is_null($userid) ? $USER->id : $userid;
 
-    $newrecord = new stdClass();
-    $newrecord->fieldid = $fieldid;
-    $newrecord->recordid = $recordid;
-    $newrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = $userid;
-
-    if (is_null($newrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID})) {
-        return false;
+    $contentrecord = datafield_voting_getcontentrecord($recordid, $fieldid);
+    $userids = datafield_voting_getuserids($contentrecord);
+    if (!in_array($userid, $userids)) {
+        $userids[] = $userid;
+        $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = implode(',', array_unique($userids));
+        return $DB->update_record('data_content', $contentrecord);
     }
 
-    return $DB->insert_record('data_content', $newrecord);
+    return true;
 }
 
 function datafield_voting_deleterecord($fieldid, $recordid, $userid = null) {
     global $DB, $USER;
+
     $userid = is_null($userid) ? $USER->id : $userid;
-    $useridcolumn = $DB->sql_compare_text(DATAFIELD_VOTING_COLUMN_CONTENT_USERID);
-    $useridvalue = $DB->sql_compare_text(':userid');
-    return $DB->execute(
-        "DELETE FROM {data_content} WHERE recordid = :recordid AND fieldid = :fieldid AND {$useridcolumn} = {$useridvalue}"
-    , [
-        'recordid' => $recordid,
-        'fieldid' => $fieldid,
-        'userid' => $userid
-    ]);
+
+    $contentrecord = datafield_voting_getcontentrecord($recordid, $fieldid);
+    $userids = datafield_voting_getuserids($contentrecord);
+    $userids = array_unique(array_diff($userids, [$userid]));
+    $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = implode(',', $userids);
+    return $DB->update_record('data_content', $contentrecord);
 }
