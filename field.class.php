@@ -52,4 +52,12 @@ class data_field_voting extends data_field_base {
         return datafield_voting_gettotalvotes($userids);
     }
 
+    function get_sort_field() {
+        return DATAFIELD_VOTING_COLUMN_CONTENT_VOTECOUNT;
+    }
+
+    function get_sort_sql($fieldname) {
+        return "CAST({$fieldname} AS INT)";
+    }
+
 }

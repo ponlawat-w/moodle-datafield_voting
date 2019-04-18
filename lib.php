@@ -3,6 +3,23 @@
 defined('MOODLE_INTERNAL') || die();
 
 const DATAFIELD_VOTING_COLUMN_CONTENT_USERID = 'content';
+const DATAFIELD_VOTING_COLUMN_CONTENT_VOTECOUNT = 'content1';
+
+function datafield_voting_getallfields() {
+    global $DB;
+    return $DB->get_records('data_fields', ['type' => 'voting']);
+}
+
+function datafield_voting_getalldataidscontainingvotings($fields) {
+    $dataids = [];
+    foreach ($fields as $field) {
+        if (!in_array($field->dataid, $dataids)) {
+            $dataids[] = $field->dataid;
+        }
+    }
+
+    return $dataids;
+}
 
 function datafield_voting_getcontentrecord($recordid, $fieldid) {
     global $DB;
@@ -26,7 +43,8 @@ function datafield_voting_getcontentrecord($recordid, $fieldid) {
 }
 
 function datafield_voting_getuserids($contentrecord) {
-    return explode(',', $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID});
+    $content = $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID};
+    return $content ? explode(',', $content) : [];
 }
 
 function datafield_voting_gettotalvotes($userids) {
@@ -85,6 +103,7 @@ function datafield_voting_addrecord($fieldid, $recordid, $userid = null) {
     if (!in_array($userid, $userids)) {
         $userids[] = $userid;
         $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = implode(',', array_unique($userids));
+        $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_VOTECOUNT} = datafield_voting_gettotalvotes($userids);
         return $DB->update_record('data_content', $contentrecord);
     }
 
@@ -100,5 +119,13 @@ function datafield_voting_deleterecord($fieldid, $recordid, $userid = null) {
     $userids = datafield_voting_getuserids($contentrecord);
     $userids = array_unique(array_diff($userids, [$userid]));
     $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_USERID} = implode(',', $userids);
+    $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_VOTECOUNT} = datafield_voting_gettotalvotes($userids);
+    return $DB->update_record('data_content', $contentrecord);
+}
+
+function datafield_voting_updatevotecount($contentrecord, $userids = null) {
+    global $DB;
+    $userids = is_null($userids) ? datafield_voting_getuserids($contentrecord) : $userids;
+    $contentrecord->{DATAFIELD_VOTING_COLUMN_CONTENT_VOTECOUNT} = datafield_voting_gettotalvotes($userids);
     return $DB->update_record('data_content', $contentrecord);
 }
