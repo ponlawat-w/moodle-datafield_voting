@@ -60,4 +60,12 @@ class data_field_voting extends data_field_base {
         return "CAST({$fieldname} AS INT)";
     }
 
+    public function parse_search_field($defaults = null) {
+        $param = 'f_' . $this->field->id;
+        if (empty($defaults[$param])) {
+            $defaults = array($param => '');
+        }
+        return optional_param($param, $defaults[$param], PARAM_NOTAGS);
+    }
+
 }
