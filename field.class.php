@@ -136,6 +136,11 @@ class data_field_voting extends data_field_base {
         return true;
     }
 
+    function delete_field() {
+        $this->delete_files();
+        return parent::delete_field();
+    }
+
     function update_content($recordid, $value, $name = '') {
         global $DB;
         $DB->delete_records('data_content', [
