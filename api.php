@@ -5,15 +5,12 @@ require_once(__DIR__ . '/../../../../config.php');
 require_once(__DIR__ . '/lib.php');
 
 require_sesskey();
-require_login();
 
 $action = required_param('action', PARAM_ALPHA);
 $fieldid = required_param('fieldid', PARAM_INT);
 $recordid = required_param('recordid', PARAM_INT);
 
 try {
-
-
     if (!$DB->record_exists('data_fields', ['id' => $fieldid])) {
         throw new moodle_exception('Field not exists #' . $fieldid, 'datafield_voting');
     }
@@ -28,6 +25,7 @@ try {
     if (!$course) {
         throw new moodle_exception('Cannot get course data', 'datafield_voting');
     }
+    require_login($course, false);
     $coursemodule = get_coursemodule_from_instance('data', $data->id, $course->id);
     if (!$coursemodule) {
         throw new moodle_exception('Cannot get course module', 'datafield_voting');

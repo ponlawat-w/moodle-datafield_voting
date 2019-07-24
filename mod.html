@@ -1,3 +1,70 @@
-<input type="hidden" name="name" value="<?php echo get_string('fieldname', 'datafield_voting'); ?>">
-<input type="hidden" name="description" value="">
+<style>
+    .selected {
+        border: #0A246A solid 1px;
+    }
+    .image-preview {
+        height: 150px;
+        width: auto;
+    }
+</style>
 <input type="hidden" name="required" value="0">
+<input type="hidden" id="datafield_voting-content" name="<?php echo DATAFIELD_VOTING_FIELD_CONTENT; ?>" value="<?php echo $this->field->{DATAFIELD_VOTING_FIELD_CONTENT}; ?>">
+<table width="100%" cellpadding="5">
+    <tr>
+        <td class="c0"><label for="name"><?php echo get_string('fieldname', 'data'); ?></label></td>
+        <td class="c1"><input class="fieldname" type="text" name="name" id="name" value="<?php p($this->field->name); ?>"></td>
+    </tr>
+    <tr>
+        <td class="c0"><label for="description"><?php echo get_string('fielddescription', 'data'); ?></label></td>
+        <td class="c1"><input class="fielddescription" type="text" name="description" id="description" value="<?php p($this->field->description); ?>" /></td>
+    </tr>
+    <tr>
+        <td class="c0">
+            <label for="datafield_voting-displaytype"><?php echo get_string('displaytype', 'datafield_voting'); ?></label>
+        </td>
+        <td class="c1">
+            <select name="<?php echo DATAFIELD_VOTING_FIELD_TYPE; ?>" title="<?php echo get_string('displaytype', 'datafield_voting'); ?>" id='datafield_voting-displaytype'>
+                <option value="<?php echo DATAFIELD_VOTING_FIELDTYPE_TEXT; ?>"<?php if ($this->field->{DATAFIELD_VOTING_FIELD_TYPE} == DATAFIELD_VOTING_FIELDTYPE_TEXT) { echo ' selected'; } ?>><?php echo get_string('displaytype_text', 'datafield_voting'); ?></option>
+                <option value="<?php echo DATAFIELD_VOTING_FIELDTYPE_ICON; ?>"<?php if ($this->field->{DATAFIELD_VOTING_FIELD_TYPE} == DATAFIELD_VOTING_FIELDTYPE_ICON) { echo ' selected'; } ?>><?php echo get_string('displaytype_icon', 'datafield_voting'); ?></option>
+                <option value="<?php echo DATAFIELD_VOTING_FIELDTYPE_IMAGE; ?>"<?php if ($this->field->{DATAFIELD_VOTING_FIELD_TYPE} == DATAFIELD_VOTING_FIELDTYPE_IMAGE) { echo ' selected'; } ?>><?php echo get_string('displaytype_image', 'datafield_voting'); ?></option>
+            </select>
+        </td>
+    </tr>
+    <tbody id="datafield_voting-displaytype_text">
+    <tr>
+        <td class="c0"><label for="datafield_voting-displaytext"><?php echo get_string('displaytext', 'datafield_voting'); ?></label></td>
+        <td class="c1">
+            <input type="text" name="text_content" id="datafield_voting-displaytext" value="<?php echo $this->text_content; ?>">
+        </td>
+    </tr>
+    </tbody>
+    <tbody id="datafield_voting-displaytype_icon">
+    <tr>
+        <td class="c0"><?php echo get_string('displayicon', 'datafield_voting'); ?></td>
+        <td class="c1">
+            <input type="hidden" name="icon_content" id="datafield_voting-displayicon" value="<?php echo $this->icon_content; ?>">
+            <?php
+            foreach (datafield_voting_getallicons() as $icon) {
+                ?><a href="javascript:void(0);" class="datafield_voting-icon_select" data-value="<?php echo $icon; ?>"><?php echo datafield_voting_geticonhtml($icon); ?></a><?php
+            }
+            ?>
+        </td>
+    </tr>
+    </tbody>
+    <tbody id="datafield_voting-displaytype_image">
+    <?php if ($this->currentimage) { ?>
+    <tr>
+        <td class="c0"><?php echo get_string('currentimage', 'datafield_voting'); ?></td>
+        <td class="c1"><img src="<?php echo $this->currentimage; ?>" class="image-preview"></td>
+    </tr>
+    <?php } ?>
+    <tr>
+        <td class="c0"><?php echo get_string('uploadimage', 'datafield_voting'); ?></td>
+        <td class="c1">
+            <input type="hidden" id="id_customimage">
+            <?php $this->filepicker->display(); ?>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<hr>

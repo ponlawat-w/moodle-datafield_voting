@@ -1,0 +1,3 @@
+.grayscale img {
+    filter: grayscale(100%);
+}

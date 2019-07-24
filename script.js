@@ -8,36 +8,38 @@ require(['jquery'], function($) {
 
         $areas.each((index, area) => {
             const $area = $(area);
-            const $vote_a = $area.find('a').first();
-            const $vote_img = $vote_a.find('img').first();
-            const $totalvotes_span = $area.find('span.totalvotes').first();
+            const $buttonspan = $area.find('.datafield_voting-buttonspan');
+            const $totalvotesspan = $area.find('span.totalvotes').first();
 
-            const fieldid = $area.attr('data-fieldid');
-            const recordid = $area.attr('data-recordid');
+            const applyaction = () => {
+                const $button = $buttonspan.find('a,button').first();
 
-            $vote_a.click(() => {
-                $totalvotes_span.removeClass('text-danger');
-                $totalvotes_span.html('…');
-                $.post(apiurl, {
-                    sesskey: sesskey,
-                    fieldid: fieldid,
-                    recordid: recordid,
-                    action: 'submitvote'
-                }, response => {
-                    $totalvotes_span.html(response.totalvotes);
-                    $vote_img.attr('src', M.util.image_url(
-                        response.haveivoted ? 'thumbsup' : 'thumbsup-no',
-                        'datafield_voting'
-                    ));
-                }).fail(response => {
-                    let errorinfo = response.responseText;
-                    if (response.responseJSON) {
-                        errorinfo = response.responseJSON.error;
-                    }
-                    $totalvotes_span.html(errorinfo)
-                        .addClass('text-danger');
+                const fieldid = $area.attr('data-fieldid');
+                const recordid = $area.attr('data-recordid');
+
+                $button.click(() => {
+                    $totalvotesspan.removeClass('text-danger');
+                    $totalvotesspan.html('…');
+                    $.post(apiurl, {
+                        sesskey: sesskey,
+                        fieldid: fieldid,
+                        recordid: recordid,
+                        action: 'submitvote'
+                    }, response => {
+                        $buttonspan.html(response.buttonhtml);
+                        $totalvotesspan.html(response.totalvotes);
+                        applyaction();
+                    }).fail(response => {
+                        let errorinfo = response.responseText;
+                        if (response.responseJSON) {
+                            errorinfo = response.responseJSON.error;
+                        }
+                        $totalvotesspan.html(errorinfo)
+                            .addClass('text-danger');
+                    });
                 });
-            });
+            };
+            applyaction();
         });
     });
 });
