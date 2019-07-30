@@ -105,9 +105,9 @@ function datafield_voting_getvotebuttonicon($field, $haveivoted) {
 
 function datafield_voting_getvotebuttonimage($field, $haveivoted) {
     $url = datafield_voting_getimageurl($field->id);
-    return html_writer::link('javascript:void(0);', html_writer::img($url, get_string('vote', 'datafield_voting'), ['style' => 'height: 1.5em; width: auto;']), [
-            'class' => 'btn btn-sm ' . ($haveivoted ? 'btn-primary' : 'btn-default')
-        ]) . ' ';
+    $style = 'height: 2em; width: auto; padding: 3px;';
+    $style .= $haveivoted ? 'border: 2px solid #1177d1;' : 'border: 2px solid #A4A4A4;';
+    return html_writer::link('javascript:void(0);', html_writer::img($url, get_string('vote', 'datafield_voting'), ['style' => $style])) . ' ';
 }
 
 function datafield_voting_getfielddata($fieldid) {
