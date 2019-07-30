@@ -1,8 +1,8 @@
 <?php
 
-$string['pluginname'] = 'Votings';
+$string['pluginname'] = 'Voting';
 $string['fieldtypelabel'] = 'Entry Voting';
-$string['fieldname'] = 'Votings';
+$string['fieldname'] = 'Voting';
 $string['vote'] = 'Vote';
 $string['displaytype'] = 'Display type';
 $string['displaytype_text'] = 'Text';
